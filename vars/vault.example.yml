@@ -1,0 +1,6 @@
+### use this template as sample to create your vault file by populating the following variables
+vault_registry_host_fqdn: ''
+vault_registry_admin_username: ''
+vault_registry_admin_password: ''
+vault_registry_ca_cert: ''
+vault_repository_host_fqdn: ''

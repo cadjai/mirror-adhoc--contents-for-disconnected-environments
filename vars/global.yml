@@ -1,0 +1,57 @@
+###################################
+# adhoc image pull variables
+###################################
+registry_host_fqdn: '{{ vault_registry_host_fqdn }}'
+local_repository: 'openshift4'
+
+adhoc_images_to_mirror:
+  redhat-registry:
+    registry: 'registry.redhat.io'
+    username: '{{ registry_admin_username }}'
+    password: '{{ registry_admin_password }}'
+    mirrored_image_list:
+      - registry.redhat.io/rh-acs/main:3.0.61.0
+      - registry.redhat.io/rh-acs/scanner:2.15.2
+      - registry.redhat.io/rh-acs/scanner-db:2.15.2
+      - registry.redhat.io/rh-acs/collector:3.1.25-latest
+      - registry.redhat.io/openshift4/ose-logging-fluentd:v4.6
+    mirror: "true"
+  quay-registry:
+    registry: 'quay.io'
+    username: ''
+    password: ''
+    mirrored_image_list:
+      - quay.io/cloudctl/konductor:4.6.18
+      - quay.io/cloudctl/konductor:4.6.15
+      - quay.io/cloudctl/konductor:4.6.4
+      - quay.io/cloudctl/konductor:4.6.6
+      - quay.io/cloudctl/konductor:4.7.4
+      - quay.io/cloudctl/konductor:4.7.16
+      - quay.io/codesparta/konductor:4.6.6
+      - quay.io/codesparta/konductor:4.7.4
+      - quay.io/codesparta/konductor:4.6.15
+      - quay.io/codesparta/konductor:4.7.16
+    mirror: "true"
+adhoc_images_bundle_file_name: 'adhoc-images-bundle.tar.xz'
+adhoc_images_bundle_file_location: "/data/staging/adhoc-images-bundle.tar.xz"
+adhoc_images_dir_bundle_staging: "/data/registry"
+adhoc_images_local_repository: 'openshift4'
+adhoc_repository_host_fqdn: '{{ vault_repository_host_fqdn }}'
+
+###################################
+# End adhoc image variables
+###################################
+
+###################################
+# adhoc binaries pull variables
+###################################
+
+list_of_binaries_to_upload:
+  - 
+binary_repository: ''
+registry_ca_cert: '{{ vault_registry_ca_cert }}'
+###################################
+# End adhoc image variables
+###################################
+
+

@@ -1,0 +1,21 @@
+#!/usr/local/bin/ansible-playbook --inventory=inventory
+- name: ' Konductor | Provision UPI Infra | push-adhoc-images-to-registry.yml' 
+  hosts: localhost 
+  become: yes
+  vars_files:
+    - vars/vault.yml'
+    - vars/global.yml'
+  vars:
+    module: "push adhoc images"
+    ansible_name_module: " Konductor | Provision UPI Infra | {{ module }}"
+
+  tasks:
+    - name: Push operator bundle content into artifactory
+      import_role:
+        name: mirror-ocp4-content
+        tasks_from: push-operators.yml
+      vars:
+        dir_bundle_staging: "{{ adhoc_images_dir_bundle_staging }}"
+        bundle_file_location: "{{ operator_bundle_file_location }}"
+        local_repository: "{{ adhoc_images_local_repository }}"
+

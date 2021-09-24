@@ -1,0 +1,112 @@
+#!/usr/local/bin/ansible-playbook --inventory=inventory
+- name: ' Konductor | Provision UPI Infra | mirror-adhoc-images.yml' 
+  hosts: localhost 
+  become: yes
+  vars_files:
+    - vars/vault.yml
+    - vars/global.yml
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    module: "mirror-adhoc-images"
+    ansible_name_module: " Konductor | Provision UPI Infra | {{ module }}"
+
+  tasks:
+    - name: '{{ ansible_name_module }} | podman:login | Login to redhat registry'
+      no_log: true
+      command: >
+         podman login -u {{ default_operator_registry_username }} \
+         -p {{ default_operator_registry_password }} \
+         --authfile {{ hostvars[inventory_hostname].ansible_env.HOME }}/.docker/oprconfig.json \
+          {{ default_operator_registry }}
+      register: authfile_created
+
+    - name: '{{ ansible_name_module }} | podman:login | Login to extra registry'
+      no_log: true
+      command: >
+        podman login -u {{ default_operator_registry_username }} \
+          -p {{ default_operator_registry_password }} \
+          --authfile {{ hostvars[inventory_hostname].ansible_env.HOME }}/.docker/oprconfig.json \
+          {{ item.value.registry }}
+      with_dict:
+        - "{{ adhoc_images_to_mirror }}"
+      when:
+        - item.key is defined and item.key != ""
+        - item.value.mirror is defined and item.value.mirror | bool
+        - item.value.registry is defined and item.value.registry != ""
+        - item.value.username is defined and item.value.username != ""
+        - item.value.password is defined and item.value.password != ""
+        - item.value.mirrored_image_list is defined and item.value.mirrored_image_list | length > 0
+
+    - name: '{{ ansible_name_module }} | set_fact |  authfile for registry'
+      set_fact:
+        operator_registry_pull_secret_file: "{{ hostvars[inventory_hostname].ansible_env.HOME }}/.docker/oprconfig.json"
+
+    - name: '{{ ansible_name_module }} | file:directory | Ensure the images staging directory exist'
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: 0755
+      loop:
+        - "{{ dir_bundle_staging }}"
+        - "{{ registry_container_dir }}"
+        - "{{ dir_bundle_location }}"
+
+    - name: '{{ ansible_name_module }} | podman:run | Start registry container '
+      command: podman run -d --name {{ registry_container_name }} \
+        -p 5000:5000 -v {{ registry_container_dir }}:/var/lib/registry:z \
+          {{ registry_container_image }}
+
+    - name: '{{ ansible_name_module }} | podman:push | push container image registry image'
+      set_fact:
+        images_to_mirror: "{{ images_to_mirror | default([]) }} + {{ item.value.mirrored_image_list }}"
+      with_dict:
+        - "{{ adhoc_images_to_mirror }}"
+      when:
+        - item.key is defined and item.key != ""
+        - item.value.mirror is defined and item.value.mirror | bool
+        - item.value.registry is defined and item.value.registry != ""
+        - item.value.mirrored_image_list is defined and item.value.mirrored_image_list | length > 0
+
+
+    - name: '{{ ansible_name_module }} | podman:push | push container image registry image'
+      command: >
+        podman pull {{ item }} 
+      loop: "{{ images_to_mirror }}"
+      when:
+        - images_to_mirror is defined
+        - images_to_mirror | length > 0
+      register: images_pulled
+
+    - name: '{{ ansible_name_module }} | podman:tag | tag container image registry image'
+      command: >
+        podman tag {{ item }} \
+        localhost:5000/{{ item.split('/')[1] }}/{{ item.split('/')[2] }}
+      loop: "{{ images_to_mirror }}"
+      when:
+        - images_to_mirror is defined
+        - images_to_mirror | length > 0
+        - images_pulled is defined
+      register: images_tagged
+
+    - name: '{{ ansible_name_module }} | podman:push | push container image registry image'
+      command: >
+        podman push --tls-verify=false \
+        localhost:5000/{{ item.split('/')[1] }}/{{ item.split('/')[2] }}
+      loop: "{{ images_to_mirror }}"
+      when:
+        - images_to_mirror is defined
+        - images_to_mirror | length > 0
+        - images_tagged is defined
+      register: images_pushed
+
+    - name: '{{ ansible_name_module }} | archive:xz | create operator image bundle '
+      become: yes
+      command: >
+        tar -c --use-compress-program='pigz -9' -v \
+          -f {{ dir_bundle_location }}/{{ adhoc_images_bundle_file_name }} \
+          -C {{ registry_container_dir }} .
+      args:
+        creates: "{{ dir_bundle_location }}/{{ adhoc_images_bundle_file_name }}"
+        warn: false
+        chdir: "{{ registry_container_dir }}/"
+
