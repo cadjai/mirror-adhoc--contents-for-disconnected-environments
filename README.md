@@ -44,24 +44,25 @@ A list of other roles hosted on Galaxy should go here, plus any details in regar
 
 Example Playbook
 ----------------
-To create the operator bundle use the sample play below:
-
-    - hosts: localhost
-      tasks:
-         - name: Create operator bundle
-           import_role:
-             name: mirror-operator
-             tasks_from: mirror-operators.yml
+To mirror and create the adhoc image bundle use the mirror-adhoc-images.yml:
+```
+   ansible-playbook mirror-adhoc-images.yml --ask-vault-pass -v
+```
              
-To push the operator bundle content into the destination registry use the sample play below:
-
-    - hosts: localhost
-      tasks:
-         - name: Push operator bundle content into the destination registry
-           import_role:
-             name: mirror-operator
-             tasks_from: push-operators.yml
+To push the adhoc image bundle content into the destination registry use the push-adhoc-images-to-registry.yml:
+```
+   ansible-playbook push-adhoc-images-to-registry.yml --ask-vault-pass -v
+```
              
+To push the adhoc binary content into the destination repository use the push-adhoc-binaries-to-content-host.yml:
+```
+   ansible-playbook push-adhoc-binaries-to-content-host.yml --ask-vault-pass -v
+```
+
+Installation
+----------------
+Before running the playbook, ensure you clone and run `ansible-galaxy role install -r requirements.yml -f -p roles` to download and install all dependencies. 
+
 
 License
 -------
