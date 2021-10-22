@@ -1,7 +1,6 @@
 #!/usr/local/bin/ansible-playbook --inventory=inventory
 - name: ' Konductor | Provision UPI Infra | mirror-adhoc-images.yml' 
   hosts: localhost 
-  become: yes
   vars_files:
     - vars/vault.yml
     - vars/global.yml
@@ -11,6 +10,10 @@
     ansible_name_module: " Konductor | Provision UPI Infra | {{ module }}"
 
   tasks:
+    - name: '{{ ansible_name_module }} | podman:rmi -af | remove any existing images'
+      no_log: true
+      command: podman rmi -af
+
     - name: '{{ ansible_name_module }} | podman:login | Login to redhat registry'
       no_log: true
       command: >

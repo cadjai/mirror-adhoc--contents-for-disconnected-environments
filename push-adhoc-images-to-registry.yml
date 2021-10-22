@@ -1,7 +1,6 @@
 #!/usr/local/bin/ansible-playbook --inventory=inventory
 - name: ' Konductor | Provision UPI Infra | push-adhoc-images-to-registry.yml' 
   hosts: localhost 
-  become: yes
   vars_files:
     - vars/vault.yml'
     - vars/global.yml'

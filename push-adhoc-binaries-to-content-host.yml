@@ -1,6 +1,5 @@
 - name: ' Konductor | Provision UPI Infra | push-adhoc-binaries-to-content-host.yml' 
   hosts: localhost 
-  become: yes
   vars_files:
     - vars/vault.yml
     - vars/global.yml
