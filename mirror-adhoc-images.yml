@@ -70,37 +70,58 @@
         - item.value.registry is defined and item.value.registry != ""
         - item.value.mirrored_image_list is defined and item.value.mirrored_image_list | length > 0
 
-
-    - name: '{{ ansible_name_module }} | podman:push | push container image registry image'
-      command: >
-        podman pull {{ item }} 
-      loop: "{{ images_to_mirror }}"
+    - name: '{{ ansible_name_module }} | mirror images using podman'
       when:
-        - images_to_mirror is defined
-        - images_to_mirror | length > 0
-      register: images_pulled
+        - use_podman is defined
+        - use_podman | bool
+      block:
+        - name: '{{ ansible_name_module }} | podman:push | push container image registry image'
+          command: >
+            podman pull {{ item }} 
+          loop: "{{ images_to_mirror }}"
+          when:
+            - images_to_mirror is defined
+            - images_to_mirror | length > 0
+          register: images_pulled
 
-    - name: '{{ ansible_name_module }} | podman:tag | tag container image registry image'
-      command: >
-        podman tag {{ item }} \
-        localhost:5000/{{ item.split('/')[1] }}/{{ item.split('/')[2] }}
-      loop: "{{ images_to_mirror }}"
-      when:
-        - images_to_mirror is defined
-        - images_to_mirror | length > 0
-        - images_pulled is defined
-      register: images_tagged
+        - name: '{{ ansible_name_module }} | podman:tag | tag container image registry image'
+          command: >
+            podman tag {{ item }} \
+            localhost:5000/{{ item.split('/')[1] }}/{{ item.split('/')[2] }}
+          loop: "{{ images_to_mirror }}"
+          when:
+            - images_to_mirror is defined
+            - images_to_mirror | length > 0
+            - images_pulled is defined
+          register: images_tagged
 
-    - name: '{{ ansible_name_module }} | podman:push | push container image registry image'
-      command: >
-        podman push --tls-verify=false \
-        localhost:5000/{{ item.split('/')[1] }}/{{ item.split('/')[2] }}
-      loop: "{{ images_to_mirror }}"
+        - name: '{{ ansible_name_module }} | podman:push | push container image registry image'
+          command: >
+            podman push --tls-verify=false \
+            localhost:5000/{{ item.split('/')[1] }}/{{ item.split('/')[2] }}
+          loop: "{{ images_to_mirror }}"
+          when:
+            - images_to_mirror is defined
+            - images_to_mirror | length > 0
+            - images_tagged is defined
+          register: images_pushed
+
+    - name: '{{ ansible_name_module }} | mirror images using skopeo'
       when:
-        - images_to_mirror is defined
-        - images_to_mirror | length > 0
-        - images_tagged is defined
-      register: images_pushed
+        - not use_podman is defined or not use_podman | bool
+      block:
+        - name: '{{ ansible_name_module }} | skopeo:copy | pull images into container image registry'
+          become: yes
+          command: >
+            skopeo copy docker://{{ item }} \
+            docker://localhost:5000/{{ item.split('/')[1] }}/{{ item.split('/')[2] }} \
+            --authfile={{ hostvars[inventory_hostname].ansible_env.HOME }}/.docker/oprconfig.json \
+            --dest-tls-verify=false
+          loop: "{{ images_to_mirror }}"
+          when:
+            - images_to_mirror is defined
+            - images_to_mirror | length > 0
+          register: images_pushed
 
     - name: '{{ ansible_name_module }} | archive:xz | create operator image bundle '
       become: yes
