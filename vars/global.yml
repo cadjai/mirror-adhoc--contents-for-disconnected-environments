@@ -4,6 +4,9 @@
 registry_host_fqdn: '{{ vault_registry_host_fqdn }}'
 local_repository: 'openshift4'
 
+root_drive: '/data'
+temp_dir: '{{ root_drive }}'
+
 adhoc_images_to_mirror:
   redhat-registry:
     registry: 'registry.redhat.io'
@@ -33,8 +36,8 @@ adhoc_images_to_mirror:
       - quay.io/codesparta/konductor:4.7.16
     mirror: "true"
 adhoc_images_bundle_file_name: 'adhoc-images-bundle.tar.xz'
-adhoc_images_bundle_file_location: "/data/staging/adhoc-images-bundle.tar.xz"
-adhoc_images_dir_bundle_staging: "/data/registry"
+adhoc_images_bundle_file_location: "{{ temp_dir }}/staging/adhoc-images-bundle.tar.xz"
+adhoc_images_dir_bundle_staging: "{{ temp_dir }}/registry"
 adhoc_images_local_repository: 'openshift4'
 adhoc_repository_host_fqdn: '{{ vault_repository_host_fqdn }}'
 
@@ -51,7 +54,17 @@ list_of_binaries_to_upload:
 binary_repository: ''
 registry_ca_cert: '{{ vault_registry_ca_cert }}'
 ###################################
-# End adhoc image variables
+# End adhoc binaries pull variables
 ###################################
 
+###################################
+# adhoc helm charts mirror variables
+###################################
+adhoc_charts_file_location: "{{ temp_dir }}/staging/"
+list_of_charts_to_mirror:
+  - 
+charts_repository: ''
+###################################
+# End helm charts mirror variables
+###################################
 

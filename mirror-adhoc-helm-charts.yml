@@ -1,0 +1,35 @@
+#!/usr/local/bin/ansible-playbook --inventory=inventory
+- name: ' Konductor | Provision UPI Infra | mirror-adhoc-helm-charts.yml' 
+  hosts: localhost 
+  vars_files:
+    - vars/vault.yml 
+    - vars/global.yml
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    module: "mirror-helm-charts"
+    ansible_name_module: " Konductor | Provision UPI Infra | {{ module }}"
+
+  pre_tasks:
+    - name: '{{ ansible_name_module }} | Pull Helm Charts'
+      shell: >
+        which helm
+      ignore_errors: yes
+      register: helm_binary
+
+    - assert:
+        that:
+          - helm_binary is defined
+          - helm_binary.rc is defined 
+          - helm_binary.rc == 0
+          - helm_binary.stdout is defined 
+        msg: " Helm is required on this host before running this "
+
+  tasks:
+    - name: '{{ ansible_name_module }} | Pull Helm Charts'
+      shell: >
+        {{ helm_binary.stdout }} pull --destination={{ adhoc_charts_file_location }} {{ item }}
+      args:
+        warn: no
+      loop: "{{ list_of_charts_to_mirror }}"
+      register: download_out
+
