@@ -1,6 +1,6 @@
 #!/usr/local/bin/ansible-playbook --inventory=inventory
 - name: ' Konductor | Provision UPI Infra | mirror-adhoc-yum-repos.yml' 
-  hosts: localhost 
+  hosts: repo_server 
   vars_files:
     - vars/vault.yml
     - vars/global.yml
