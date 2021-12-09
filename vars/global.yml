@@ -68,3 +68,20 @@ charts_repository: ''
 # End helm charts mirror variables
 ###################################
 
+###################################
+# adhoc yum repo variables
+###################################
+dir_reposync_location: "/data/repos"
+dir_reposync_destination: "/repo"
+repos_to_sync:
+  - rhel-8-for-x86_64-baseos-rpms
+  - rhel-8-for-x86_64-appstream-rpms
+  - rhel-8-for-x86_64-supplementary-rpms
+  - ansible-2.9-for-rhel-8-x86_64-rpms
+use_rh_subscription: ''
+rh_access_username: ''
+rh_access_password: ''
+copy_to_remote: ''
+dir_repobundle_location: '/tmp'
+repobundle_file_name: 'yum-repos-bundle.tar.xz'
+

@@ -37,6 +37,17 @@ Role Variables
 - registry_host_fqdn: The IP or FQDN of the destination registry.
 - registry_container_dir: The location of the container files on the controller where the registry container will save the image layers to be compressed and transported to the disconnected environment.
 
+
+Yum reposync content variables 
+- dir_reposync_location: The directory on the controller where the content is to be sync-ed into 
+- repos_to_sync: List of repositories to sync
+- use_rh_subscription: Whether to use RH Subscription or not , default to not 
+- rh_access_username: The RH access username name to use to register the host
+- rh_access_password: The RH access password to use to use to register the host 
+- copy_to_remote: Whether to copy the content to a remote directory or not, default to not
+- dir_repobundle_location: The local directory where the bundle will be created
+- repobundle_file_name: The name of the bundle file created
+
 Dependencies
 ------------
 
@@ -57,6 +68,11 @@ To push the adhoc image bundle content into the destination registry use the pus
 To push the adhoc binary content into the destination repository use the push-adhoc-binaries-to-content-host.yml:
 ```
    ansible-playbook push-adhoc-binaries-to-content-host.yml --ask-vault-pass -v
+```
+
+To mirror adhoc rpm repo content , use the mirror-adhoc-yum-rhel8-repos.yml:
+```
+   ansible-playbook mirror-adhoc-yum-rhel8-repos.yml --ask-vault-pass -v
 ```
 
 Installation

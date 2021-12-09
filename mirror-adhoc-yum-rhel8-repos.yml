@@ -1,0 +1,74 @@
+#!/usr/local/bin/ansible-playbook --inventory=inventory
+- name: ' Konductor | Provision UPI Infra | mirror-adhoc-yum-repos.yml' 
+  hosts: localhost 
+  vars_files:
+    - vars/vault.yml
+    - vars/global.yml
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    module: "mirror-adhoc-yum-repos"
+    ansible_name_module: " Konductor | Provision UPI Infra | {{ module }}"
+
+  tasks:
+    - name: '{{ ansible_name_module }} | use redhat_subscription '
+      when:
+        - use_rh_subscription is defined
+        - use_rh_subscription | bool 
+        - rh_access_username is defined 
+        - rh_access_username != ''
+        - rh_access_password is defined
+        - rh_access_password != ''
+      block:
+        - name: '{{ ansible_name_module }} | redhat_subscription '
+          redhat_subscription:
+            username: "{{ rh_access_username }}"
+            password: "{{ rh_access_password }}"
+            pool_ids:
+              -
+              -
+            auto_attach: true
+    
+    - name: '{{ ansible_name_module }} | rhsm_repository '
+      rhsm_repository:
+        name: "{{ repos_to_sync | join(',') }}"
+        state: enabled
+      delegate_to: localhost
+
+    - name: '{{ ansible_name_module }} | Upgrade all packages '
+      yum:
+        name: '*'
+        state: latest
+      delegate_to: localhost
+
+    - name: '{{ ansible_name_module }} | shell:reposync | perform reposync '
+      shell: reposync -p {{ dir_reposync_location }} --download-metadata --repo={{ item }}
+      args:
+        chdir: "{{ dir_reposync_location }}"
+      with_items:
+        - "{{ repos_to_sync }}"
+      delegate_to: localhost
+      register: repos_synced
+
+    - name: '{{ ansible_name_module }} | tar | create repo bundle '
+      become: yes
+      command: >
+        tar -c --use-compress-program='pigz -9' -v \
+          -f {{ dir_repobundle_location }}/{{ repobundle_file_name }} \
+          -C {{ dir_reposync_location }} .
+      args:
+        creates: "{{ dir_repobundle_location }}/{{ repobundle_file_name }}"
+        warn: false
+        chdir: "{{ dir_reposync_location }}/"
+      when:
+        - create_repo_bundle is defined
+        - create_repo_bundle | bool 
+
+    - name: '{{ ansible_name_module }} | copy | copy repos to content server '
+      copy:
+        src: "{{ dir_reposync_location }}/"
+        dest: "{{ dir_reposync_destination }}/"
+        mode: 0744
+      when:
+        - copy_to_remote is defined
+        - copy_to_remote | bool 
+
