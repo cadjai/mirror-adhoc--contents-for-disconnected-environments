@@ -72,7 +72,7 @@ To push the adhoc binary content into the destination repository use the push-ad
 
 To mirror adhoc rpm repo content , use the mirror-adhoc-yum-rhel8-repos.yml:
 ```
-   ansible-playbook mirror-adhoc-yum-rhel8-repos.yml --ask-vault-pass -v
+   ansible-playbook -i inventory mirror-adhoc-yum-rhel8-repos.yml --ask-vault-pass -v
 ```
 
 Installation
