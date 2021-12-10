@@ -13,7 +13,7 @@
     - name: '{{ ansible_name_module }} | Ensure required package is installed'
       become: yes
       yum:
-        name: "yum-utils,createrepo"
+        name: "yum-utils,createrepo,genisoimage"
       delegate_to: localhost
       register: reposync_pkgs_installed
 
@@ -57,7 +57,7 @@
       delegate_to: localhost
       register: repos_synced
 
-    - name: '{{ ansible_name_module }} | tar | create repo bundle '
+    - name: '{{ ansible_name_module }} | command:tar | create repo bundle '
       become: yes
       command: >
         tar -c --use-compress-program='pigz -9' -v \
@@ -70,6 +70,18 @@
       when:
         - create_repo_bundle is defined
         - create_repo_bundle | bool 
+
+    - name: '{{ ansible_name_module }} | command:genisoimage | create repo iso '
+      become: yes
+      command: >
+        genisoimage -R -o {{ dir_repobundle_location }}/{{ repobundle_file_name.split('.tar')[0] }}{{ '.iso' }} {{ dir_reposync_location }}
+      args:
+        creates: "{{ dir_repobundle_location }}/{{ repobundle_file_name.split('.tar')[0] }}{{ '.iso' }}"
+        warn: false
+        chdir: "{{ dir_reposync_location }}/"
+      when:
+        - create_repo_iso is defined
+        - create_repo_iso | bool 
 
     - name: '{{ ansible_name_module }} | copy | copy repos to content server '
       copy:
