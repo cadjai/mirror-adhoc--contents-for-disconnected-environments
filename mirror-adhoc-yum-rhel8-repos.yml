@@ -10,6 +10,13 @@
     ansible_name_module: " Konductor | Provision UPI Infra | {{ module }}"
 
   tasks:
+    - name: '{{ ansible_name_module }} | Ensure required package is installed'
+      become: yes
+      yum:
+        name: "yum-utils,createrepo"
+      delegate_to: localhost
+      register: reposync_pkgs_installed
+
     - name: '{{ ansible_name_module }} | use redhat_subscription '
       when:
         - use_rh_subscription is defined
@@ -32,15 +39,16 @@
       rhsm_repository:
         name: "{{ repos_to_sync | join(',') }}"
         state: enabled
-      delegate_to: localhost
 
     - name: '{{ ansible_name_module }} | Upgrade all packages '
+      become: yes
       yum:
         name: '*'
         state: latest
       delegate_to: localhost
 
     - name: '{{ ansible_name_module }} | shell:reposync | perform reposync '
+      become: yes
       shell: reposync -p {{ dir_reposync_location }} --download-metadata --repo={{ item }}
       args:
         chdir: "{{ dir_reposync_location }}"
