@@ -81,7 +81,9 @@ repos_to_sync:
 use_rh_subscription: ''
 rh_access_username: ''
 rh_access_password: ''
-copy_to_remote: ''
+copy_to_remote: 'false'
 dir_repobundle_location: '/tmp'
 repobundle_file_name: 'yum-repos-bundle.tar.xz'
+create_repo_bundle: 'false'
+create_repo_iso: 'false'
 
